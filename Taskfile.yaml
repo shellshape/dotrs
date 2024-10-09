@@ -1,0 +1,25 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  run:
+    aliases:
+      - r
+    cmds:
+      - cargo run -- {{.CLI_ARGS}}
+
+  build-musl:
+    aliases:
+      - musl
+    cmds:
+      - cross build --release --target=x86_64-unknown-linux-musl
+
+  testenv:
+    aliases:
+      - t
+    deps:
+      - musl
+    cmds:
+      - docker build . -f testenv.Dockerfile -t testenv
+      - docker run --rm -it testenv

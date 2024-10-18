@@ -8,15 +8,17 @@ use std::{fs, path::Path};
 #[derive(Args)]
 #[command(visible_aliases = ["i"])]
 pub struct Import {
-    url: String,
+    /// The URI of the source Git repository
+    uri: String,
 
-    #[arg(short = 'r', long = "ref", default_value = "main")]
-    git_ref: String,
+    /// The branch to check out
+    #[arg(short, long, default_value = "main")]
+    branch: String,
 }
 
 impl Command for Import {
     fn run(&self, cfg: &Config) -> Result<()> {
-        import_from_git(&cfg.stage_dir, &self.url, &self.git_ref)?;
+        import_from_git(&cfg.stage_dir, &self.uri, &self.branch)?;
         Ok(())
     }
 }

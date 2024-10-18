@@ -23,11 +23,12 @@ struct Cli {
 
 register_commands! {
     Apply
-    Import
     Clean
-    Cd
-    Service
+    Import
+    Pull
     Update
+    Cd
+    StartService
 }
 
 fn main() -> Result<()> {

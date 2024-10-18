@@ -9,8 +9,10 @@ use clap::Args;
 use log::{debug, error};
 use std::{fs, path::Path};
 
+/// Removes applied dotfiles from the home directory
 #[derive(Args)]
 pub struct Clean {
+    /// Force removal even if consistency errors occur
     #[arg(short, long)]
     force: bool,
 }

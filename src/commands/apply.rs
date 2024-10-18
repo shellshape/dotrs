@@ -2,8 +2,8 @@ use super::Command;
 use crate::{config::Config, success, util::dotfiles};
 use anyhow::Result;
 use clap::Args;
-use log::info;
 
+/// Sync dotfiles from stage to home directory
 #[derive(Args)]
 #[command(visible_aliases = ["a"])]
 pub struct Apply;

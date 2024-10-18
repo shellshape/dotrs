@@ -4,8 +4,9 @@ use anyhow::Result;
 use clap::Args;
 use log::warn;
 
+/// Commit and push changes in stage to upstream repository
 #[derive(Args)]
-pub struct Update {}
+pub struct Update;
 
 impl Command for Update {
     fn run(&self, cfg: &Config) -> Result<()> {

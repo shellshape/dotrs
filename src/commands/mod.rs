@@ -20,6 +20,7 @@ re_export! {
     cd
     service
     update
+    pull
 }
 
 pub trait Command {

@@ -1,3 +1,4 @@
+use crate::util::git::DEFAULT_COMMIT_AUTHOR;
 use crate::{config::Config, util::dotfiles};
 use anyhow::Result;
 use debounce::EventDebouncer;
@@ -103,10 +104,18 @@ impl Service {
                         error!("failed applying dotfiles: {err}");
                     }
                 }
-                Event::Update => {}
+                Event::Update => {
+                    if let Err(err) =
+                        dotfiles::update(&self.cfg, DEFAULT_COMMIT_AUTHOR, None::<&str>)
+                    {
+                        error!("failed applying dotfiles: {err}");
+                    }
+                }
                 Event::Pull => {
                     if let Err(err) = dotfiles::pull(&self.cfg) {
                         error!("failed pulling dotfiles stage: {err}");
+                    } else if let Err(err) = dotfiles::apply(&self.cfg) {
+                        error!("failed applying dotfiles after pull: {err}");
                     }
                 }
             }

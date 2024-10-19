@@ -8,6 +8,8 @@ use std::{
     string::FromUtf8Error,
 };
 
+pub const DEFAULT_COMMIT_AUTHOR: &str = "dotrs <dot@rs>";
+
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("git command execution failed: {0}")]

@@ -1,3 +1,4 @@
+use crate::util::git::DEFAULT_COMMIT_AUTHOR;
 use super::Command;
 use crate::{config::Config, success, util::dotfiles};
 use anyhow::Result;
@@ -12,7 +13,7 @@ pub struct Update {
     message: Option<String>,
 
     /// Commit author
-    #[arg(short, long, default_value = "dotrs <dot@rs>")]
+    #[arg(short, long, default_value = DEFAULT_COMMIT_AUTHOR)]
     author: String,
 }
 

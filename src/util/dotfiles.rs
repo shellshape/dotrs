@@ -42,7 +42,11 @@ pub fn pull(cfg: &Config) -> Result<()> {
     Ok(())
 }
 
-pub fn update(cfg: &Config) -> Result<bool> {
+pub fn update(
+    cfg: &Config,
+    author: impl AsRef<str>,
+    message: Option<impl AsRef<str>>,
+) -> Result<bool> {
     let cache_dir = cfg.stage_dir.as_ref();
 
     let git = Git::new(cache_dir);
@@ -62,20 +66,20 @@ pub fn update(cfg: &Config) -> Result<bool> {
 
     git.exec(["add", "."])?;
 
-    let changed_files = git
-        .changed_files()?
-        .iter()
-        .map(change_to_string)
-        .collect::<Vec<_>>()
-        .join(", ");
+    let message = match message {
+        Some(ref s) => s.as_ref(),
+        None => {
+            let changed_files = git
+                .changed_files()?
+                .iter()
+                .map(change_to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
+            &format!("auto-update: {changed_files}")
+        }
+    };
 
-    git.exec([
-        "commit",
-        "--message",
-        &format!("auto-update: {changed_files}"),
-        "--author",
-        "dotrs <noreply@dot.rs>",
-    ])?;
+    git.exec(["commit", "--message", message, "--author", author.as_ref()])?;
     git.exec(["push", "origin", &branch])?;
 
     Ok(true)

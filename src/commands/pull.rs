@@ -2,7 +2,6 @@ use super::Command;
 use crate::{config::Config, success, util::dotfiles};
 use anyhow::Result;
 use clap::Args;
-use log::warn;
 
 /// Updates the dotfiles stage from the upstream repository
 #[derive(Args)]

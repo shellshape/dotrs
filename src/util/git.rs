@@ -1,3 +1,5 @@
+use log::debug;
+use std::str::FromStr;
 use std::{
     ffi::OsStr,
     io,
@@ -5,8 +7,6 @@ use std::{
     process::{Command, ExitStatus, Output},
     string::FromUtf8Error,
 };
-
-use log::debug;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -18,6 +18,12 @@ pub enum Error {
 
     #[error("failed transforming output to utf8 string: {0}")]
     Utf8Transform(#[from] FromUtf8Error),
+
+    #[error("invalid change type: {0}")]
+    InvalidChangeType(String),
+
+    #[error("invalid change line: {0}")]
+    InvalidChangeLine(String),
 }
 
 pub struct CommandOutput(Output);
@@ -34,6 +40,25 @@ impl CommandOutput {
 
     pub fn stderr(&self) -> Result<String, Error> {
         Ok(String::from_utf8(self.0.stderr.to_vec())?)
+    }
+}
+
+pub enum Change {
+    Modified,
+    Added,
+    Deleted,
+}
+
+impl FromStr for Change {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "M" => Ok(Change::Modified),
+            "A" => Ok(Change::Added),
+            "D" => Ok(Change::Deleted),
+            _ => Err(Error::InvalidChangeType(s.to_owned())),
+        }
     }
 }
 
@@ -94,4 +119,24 @@ impl Git {
         let branch = out.stdout()?;
         Ok(branch.trim().to_owned())
     }
+
+    pub fn changed_files(&self) -> Result<Vec<(Change, String)>, Error> {
+        let changes = self.exec(["status", "--porcelain"])?;
+        changes.stdout()?.lines().map(parse_change).collect()
+    }
+}
+
+fn split_once<I, E>(mut iter: I) -> Option<(E, E)>
+where
+    I: Iterator<Item = E>,
+{
+    let first = iter.next()?;
+    let second = iter.next()?;
+    Some((first, second))
+}
+
+fn parse_change(line: &str) -> Result<(Change, String), Error> {
+    let (change, name) = split_once(line.split_whitespace().map(str::trim))
+        .ok_or_else(|| Error::InvalidChangeLine(line.to_owned()))?;
+    Ok((change.parse()?, name.to_owned()))
 }

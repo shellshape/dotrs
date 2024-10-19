@@ -1,4 +1,4 @@
-use super::git::{self, Git};
+use super::git::{self, Change, Git};
 use crate::{
     config::Config,
     filecache::{FileCache, NAME_FILECACHE},
@@ -61,14 +61,31 @@ pub fn update(cfg: &Config) -> Result<bool> {
     }
 
     git.exec(["add", "."])?;
+
+    let changed_files = git
+        .changed_files()?
+        .iter()
+        .map(change_to_string)
+        .collect::<Vec<_>>()
+        .join(", ");
+
     git.exec([
         "commit",
         "--message",
-        "auto-update dotfiles",
+        &format!("auto-update: {changed_files}"),
         "--author",
         "dotrs <noreply@dot.rs>",
     ])?;
     git.exec(["push", "origin", &branch])?;
 
     Ok(true)
+}
+
+fn change_to_string((mode, filename): &(Change, String)) -> String {
+    let prefix = match mode {
+        Change::Modified => "update",
+        Change::Added => "add",
+        Change::Deleted => "remove",
+    };
+    format!("{prefix} {filename}")
 }

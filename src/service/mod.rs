@@ -36,12 +36,11 @@ macro_rules! matches_event {
 
 impl Service {
     pub fn new(
+        cfg: Config,
         apply_delay: Duration,
         update_delay: Duration,
         pull_frequency: Duration,
     ) -> Result<Service> {
-        let cfg = Config::parse()?;
-
         let (tx, rx) = mpsc::channel();
 
         let apply_tx = tx.clone();

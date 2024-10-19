@@ -17,6 +17,9 @@ struct Cli {
     #[arg(short, long)]
     verbose: bool,
 
+    #[clap(flatten)]
+    config: Config,
+
     #[command(subcommand)]
     commands: Commands,
 }
@@ -33,7 +36,8 @@ register_commands! {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    let cfg = Config::parse()?;
+
+    let cfg = cli.config;
 
     let level_filter = match cli.verbose {
         true => LevelFilter::Debug,

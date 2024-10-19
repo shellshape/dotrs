@@ -1,11 +1,9 @@
 use super::git::{self, Change, Git};
-use crate::{
-    config::Config,
-    filecache::{FileCache, NAME_FILECACHE},
-};
+use crate::filecache::{FileCache, NAME_FILECACHE};
 use anyhow::Result;
 use log::debug;
 use std::fs;
+use crate::config::Config;
 
 pub fn apply(cfg: &Config) -> Result<()> {
     let home_dir =

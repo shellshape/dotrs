@@ -1,56 +1,59 @@
-use anyhow::Result;
-use envconfig::Envconfig;
-use std::{
-    path::{Path, PathBuf},
-    str::FromStr,
-};
+use clap::Args;
+use log::LevelFilter;
+use std::fmt;
+use std::fmt::Formatter;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
-macro_rules! path_with_home_default {
-    ($name:tt, $def:literal) => {
-        pub struct $name(PathBuf);
-
-        impl FromStr for $name {
-            type Err = anyhow::Error;
-
-            fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-                if s.is_empty() {
-                    Ok(Self(
-                        dirs::home_dir()
-                            .ok_or_else(|| anyhow::anyhow!("could not find user home path"))?
-                            .join($def),
-                    ))
-                } else {
-                    Ok(Self(PathBuf::from_str(s)?))
-                }
-            }
-        }
-
-        impl AsRef<Path> for $name {
-            fn as_ref(&self) -> &Path {
-                self.0.as_ref()
-            }
-        }
-    };
+macro_rules! default_home_dir {
+    ( $first_elem:literal $( / $elem:literal )* ) => {{
+        PrintablePathBuf(
+            dirs::home_dir().expect("home dir")
+            .join($first_elem)
+            $( .join($elem) )*
+        )
+    }};
 }
 
-path_with_home_default! { StageDir, ".local/dotrs/stage" }
-path_with_home_default! { CacheDir, ".local/dotrs/cache" }
+#[derive(Clone)]
+pub struct PrintablePathBuf(PathBuf);
 
-#[derive(Envconfig)]
-pub struct Config {
-    #[envconfig(from = "DOTRS_STAGE_DIR", default = "")]
-    pub stage_dir: StageDir,
+impl FromStr for PrintablePathBuf {
+    type Err = <PathBuf as FromStr>::Err;
 
-    #[envconfig(from = "DOTRS_CACHE_DIR", default = "")]
-    pub cache_dir: CacheDir,
-
-    #[envconfig(from = "DOTRS_LOG_LEVEL", default = "info")]
-    pub log_level: log::LevelFilter,
-}
-
-impl Config {
-    pub fn parse() -> Result<Self> {
-        dotenv::dotenv().ok();
-        Ok(Self::init_from_env()?)
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(PathBuf::from_str(s)?))
     }
+}
+
+impl fmt::Display for PrintablePathBuf {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.0.to_string_lossy().fmt(f)
+    }
+}
+
+impl AsRef<Path> for PrintablePathBuf {
+    fn as_ref(&self) -> &Path {
+        self.0.as_ref()
+    }
+}
+
+#[derive(Args, Clone)]
+pub struct Config {
+    #[arg(short, long, default_value = "info", env = "DOTRS_LOG_LEVEL")]
+    pub log_level: LevelFilter,
+
+    #[arg(
+        long,
+        default_value_t = default_home_dir!(".local" / "dotrs" / "stage"),
+        env = "DOTRS_STAGE_DIR"
+    )]
+    pub stage_dir: PrintablePathBuf,
+
+    #[arg(
+        long,
+        default_value_t = default_home_dir!(".local" / "dotrs" / "cache"),
+        env = "DOTRS_CACHE_DIR"
+    )]
+    pub cache_dir: PrintablePathBuf,
 }

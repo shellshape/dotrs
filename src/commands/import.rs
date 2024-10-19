@@ -26,9 +26,9 @@ impl Command for Import {
 fn import_from_git(stage_dir: impl AsRef<Path>, url: &str, git_ref: &str) -> Result<()> {
     if !stage_dir.as_ref().exists() {
         fs::create_dir_all(&stage_dir)?;
+    } else if stage_dir.as_ref().join(".git").exists() {
+        anyhow::bail!("Stage dir already contains a git repository")
     }
-
-    // TODO: check if git repo already exists
 
     let git = Git::new(stage_dir.as_ref());
     git.exec(["init"])?;

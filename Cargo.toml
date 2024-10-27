@@ -12,9 +12,12 @@ debounce = "0.2.2"
 dirs = "5"
 duration-string = { version = "0.4.0", features = ["serde"] }
 env_logger = "0.11.5"
+handlebars = "6.1.0"
 ignore = "0.4.23"
 log = "0.4.22"
 notify = "6.1.1"
+serde = { version = "1.0.213", features = ["derive"] }
+serde_yaml = "0.9.34"
 thiserror = "1.0.64"
 yansi = "1.0.1"
 

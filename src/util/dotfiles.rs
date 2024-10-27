@@ -1,17 +1,28 @@
 use super::git::{self, Change, Git};
-use crate::filecache::{FileCache, NAME_FILECACHE};
-use anyhow::Result;
-use log::debug;
-use std::fs;
 use crate::config::Config;
+use crate::filecache::{FileCache, NAME_FILECACHE};
+use crate::profile::{get_applied_profile, write_applied_profile, Profile, Value};
+use anyhow::Result;
+use handlebars::Handlebars;
+use ignore::{DirEntry, WalkBuilder};
+use log::debug;
+use std::fs::{self, File};
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 
-pub fn apply(cfg: &Config) -> Result<()> {
-    let home_dir =
-        dirs::home_dir().ok_or_else(|| anyhow::anyhow!("failed getting user home dir"))?;
+pub fn apply<S: Into<String>>(cfg: &Config, profile: Option<S>) -> Result<()> {
+    let home_dir = super::home_dir()?;
 
-    debug!("home dir = {home_dir:?}");
+    debug!("home_dir = {home_dir:?}");
 
-    let copied_files = super::fs::copy_recursively(&cfg.stage_dir, &home_dir)?;
+    let profile = match profile {
+        Some(p) => Some(p.into()),
+        None => get_applied_profile(&cfg.cache_dir)?,
+    };
+
+    debug!("profile = {profile:?}");
+
+    let copied_files = apply_recursively(&cfg.stage_dir, &home_dir, profile.as_deref())?;
 
     let mut fc = FileCache::open(cfg.cache_dir.as_ref().join(NAME_FILECACHE))?;
 
@@ -24,6 +35,11 @@ pub fn apply(cfg: &Config) -> Result<()> {
     fc.set(copied_files);
 
     fc.store()?;
+
+    if let Some(profile) = profile {
+        debug!("writing profile {profile} to cache ...");
+        write_applied_profile(&cfg.cache_dir, &profile)?;
+    }
 
     Ok(())
 }
@@ -90,4 +106,61 @@ fn change_to_string((mode, filename): &(Change, String)) -> String {
         Change::Deleted => "remove",
     };
     format!("{prefix} {filename}")
+}
+
+pub fn apply_recursively(
+    from: impl AsRef<Path>,
+    to: impl AsRef<Path>,
+    profile: Option<&str>,
+) -> Result<Vec<PathBuf>> {
+    let walker = WalkBuilder::new(&from)
+        .hidden(false)
+        .add_custom_ignore_filename(".dotrsignore")
+        .filter_entry(walk_filter)
+        .build();
+
+    let mut copied_files = vec![];
+
+    let mut hb = Handlebars::new();
+    hb.set_strict_mode(true);
+
+    let data = match profile {
+        Some(profile) => Profile::new(from.as_ref(), profile != "default").load(profile)?,
+        None => Value::None,
+    };
+
+    let mut buf = String::new();
+
+    for entry in walker {
+        let entry = entry?;
+        let path = entry.path();
+        let to_path = to.as_ref().join(path.strip_prefix(&from)?);
+
+        if path.metadata()?.is_dir() {
+            if !to_path.exists() {
+                fs::create_dir_all(&to_path)?;
+            }
+        } else {
+            buf.clear();
+            File::open(path)?.read_to_string(&mut buf)?;
+            let rendered = hb.render_template(&buf, &data)?;
+            File::create(&to_path)?.write_all(rendered.as_bytes())?;
+
+            copied_files.push(to_path.to_owned());
+            debug!("copied {path:?} -> {to_path:?}");
+        }
+    }
+
+    Ok(copied_files)
+}
+
+fn walk_filter(de: &DirEntry) -> bool {
+    let Ok(meta) = de.metadata() else {
+        return false;
+    };
+
+    match meta.is_dir() {
+        true => !de.path().ends_with(".git") && !de.path().ends_with(".dotrs-profiles"),
+        false => !de.path().ends_with(".gitignore"),
+    }
 }

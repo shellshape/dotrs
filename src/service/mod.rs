@@ -100,7 +100,7 @@ impl Service {
             info!("received event: {event:?}");
             match event {
                 Event::Apply => {
-                    if let Err(err) = dotfiles::apply(&self.cfg) {
+                    if let Err(err) = dotfiles::apply(&self.cfg, None::<&str>) {
                         error!("failed applying dotfiles: {err}");
                     }
                 }
@@ -114,7 +114,7 @@ impl Service {
                 Event::Pull => {
                     if let Err(err) = dotfiles::pull(&self.cfg) {
                         error!("failed pulling dotfiles stage: {err}");
-                    } else if let Err(err) = dotfiles::apply(&self.cfg) {
+                    } else if let Err(err) = dotfiles::apply(&self.cfg, None::<&str>) {
                         error!("failed applying dotfiles after pull: {err}");
                     }
                 }

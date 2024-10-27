@@ -2,6 +2,7 @@ mod commands;
 mod config;
 mod filecache;
 mod logging;
+mod profile;
 mod service;
 mod util;
 

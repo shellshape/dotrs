@@ -11,6 +11,8 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 pub fn apply<S: Into<String>>(cfg: &Config, profile: Option<S>) -> Result<()> {
+    assert_stage_dir_initialized(cfg)?;
+
     let home_dir = super::home_dir()?;
 
     debug!("home_dir = {home_dir:?}");
@@ -45,12 +47,11 @@ pub fn apply<S: Into<String>>(cfg: &Config, profile: Option<S>) -> Result<()> {
 }
 
 pub fn pull(cfg: &Config) -> Result<()> {
+    assert_stage_dir_initialized(cfg)?;
+
     let cache_dir = cfg.stage_dir.as_ref();
-
     let git = Git::new(cache_dir);
-
     let branch = git.current_branch()?;
-
     git.exec(["pull", "origin", &branch])?;
 
     Ok(())
@@ -61,6 +62,8 @@ pub fn update(
     author: impl AsRef<str>,
     message: Option<impl AsRef<str>>,
 ) -> Result<bool> {
+    assert_stage_dir_initialized(cfg)?;
+
     let cache_dir = cfg.stage_dir.as_ref();
 
     let git = Git::new(cache_dir);
@@ -99,16 +102,18 @@ pub fn update(
     Ok(true)
 }
 
-fn change_to_string((mode, filename): &(Change, String)) -> String {
-    let prefix = match mode {
-        Change::Modified => "update",
-        Change::Added => "add",
-        Change::Deleted => "remove",
-    };
-    format!("{prefix} {filename}")
+pub fn stage_dir_initialized(cfg: &Config) -> bool {
+    cfg.stage_dir.as_ref().join(".git").exists()
 }
 
-pub fn apply_recursively(
+pub fn assert_stage_dir_initialized(cfg: &Config) -> Result<()> {
+    if !stage_dir_initialized(cfg) {
+        anyhow::bail!("dotfiles stage has not been initialized");
+    }
+    Ok(())
+}
+
+fn apply_recursively(
     from: impl AsRef<Path>,
     to: impl AsRef<Path>,
     profile: Option<&str>,
@@ -163,4 +168,13 @@ fn walk_filter(de: &DirEntry) -> bool {
         true => !de.path().ends_with(".git") && !de.path().ends_with(".dotrs-profiles"),
         false => !de.path().ends_with(".gitignore"),
     }
+}
+
+fn change_to_string((mode, filename): &(Change, String)) -> String {
+    let prefix = match mode {
+        Change::Modified => "update",
+        Change::Added => "add",
+        Change::Deleted => "remove",
+    };
+    format!("{prefix} {filename}")
 }

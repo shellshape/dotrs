@@ -15,12 +15,12 @@ macro_rules! re_export {
 // in this module.
 re_export! {
     apply
-    import
-    clean
     cd
+    clean
+    import
+    pull
     service
     update
-    pull
 }
 
 pub trait Command {

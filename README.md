@@ -14,6 +14,7 @@ seamless and easy as possible.
 - [x] Update dotfiles to remote directory
 - [x] Service to automatically sync dotfiles with remote repository
 - [x] Profiles and templating support
+- [ ] List currently tracked dotfiles (i.e. `dotrs ls`)
 - [ ] Value encryption in profiles
 
 ## Installation
@@ -58,3 +59,14 @@ service watches the stage directory for changes and applies them automatically t
 debounce period, changes are automatically committed and pushed from the stage to the upstream repository. Also,
 periodically, the service pulls changes from the upstream repository into the stage directory and applies them, so that
 your dotfiles are always up-to-date across devices.
+
+### Profiles
+
+dotrs features profiles and templating. You can create profiles by creating a `.dotrs-profiles` directory in your dotfiles
+repository. There, you can create a `<profile-name>.yaml` file, which can be applied on your dotfiles with the
+`dotrs apply --profile <profile-name>` command. Profile files contain variables which then are substituted into your dotfiles
+using the [Handlebars](https://handlebarsjs.com/) templating language. 
+
+> [!INFO]  
+> The Rust implementation of handlebars used in this project only supports a subset of handlebars. Please refer to the
+> [handlebars-rust](https://crates.io/crates/handlebars) crate documentation for more information.

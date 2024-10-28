@@ -12,7 +12,7 @@ if [ -z "$DOTRS_BIN" ]; then
 fi
 
 dotrs() {
-    if [ "$1" == "cd" ]; then
+    if [ "$1" = "cd" ]; then
         cd "$("$DOTRS_BIN" $@)"
     else
         "$DOTRS_BIN" $@

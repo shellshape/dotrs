@@ -4,8 +4,11 @@
     <dict>
         <key>Label</key>
         <string>de.zekro.dotrs</string>
-        <key>Program</key>
-        <string>/Users/Me/.cargo/bin/dotrs</string>
+        <key>ProgramArguments</key>
+        <array>
+            <string>/Users/Me/.cargo/bin/dotrs</string>
+            <string>start-service</string>
+        </array>
         <key>RunAtLoad</key>
         <true/>
     </dict>

@@ -37,7 +37,12 @@ echo "source /usr/local/bin/dotrs-wrapper.sh" >> "$HOME/.profile"
 
 ### Service Setup
 
-_WIP_
+The service is integrated into the same binary as the CLI and can simply be started with the `dotrs start-service`
+command. Configuration for the service can be passed wither via command line parameters or via environment variables.
+See `dotrs start-service --help` for more information.
+
+In the [service](./service) directory, you can find some configuration examples to run the dotrs service using systemd
+or launchd (macOS).
 
 ## Concept
 
@@ -67,6 +72,6 @@ repository. There, you can create a `<profile-name>.yaml` file, which can be app
 `dotrs apply --profile <profile-name>` command. Profile files contain variables which then are substituted into your dotfiles
 using the [Handlebars](https://handlebarsjs.com/) templating language. 
 
-> [!INFO]  
+> [!Note]
 > The Rust implementation of handlebars used in this project only supports a subset of handlebars. Please refer to the
 > [handlebars-rust](https://crates.io/crates/handlebars) crate documentation for more information.

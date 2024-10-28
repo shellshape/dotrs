@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 EnvironmentFile=-/etc/default/dotrs
-ExecStart=/usr/local/bin/dotrs
+ExecStart=/usr/local/bin/dotrs start-service
 KillMode=process
 Restart=on-failure
 Type=notify

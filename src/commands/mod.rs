@@ -18,6 +18,7 @@ re_export! {
     cd
     clean
     import
+    list
     pull
     service
     update

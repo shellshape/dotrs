@@ -14,7 +14,7 @@ seamless and easy as possible.
 - [x] Update dotfiles to remote directory
 - [x] Service to automatically sync dotfiles with remote repository
 - [x] Profiles and templating support
-- [ ] List currently tracked dotfiles (i.e. `dotrs ls`)
+- [x] List currently tracked dotfiles (i.e. `dotrs ls`)
 - [ ] Value encryption in profiles
 
 ## Installation

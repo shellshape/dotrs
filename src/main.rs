@@ -28,6 +28,7 @@ struct Cli {
 register_commands! {
     Apply
     Clean
+    List
     Import
     Pull
     Update

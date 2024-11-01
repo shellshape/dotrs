@@ -1,5 +1,6 @@
 mod commands;
 mod config;
+mod encryption;
 mod filecache;
 mod logging;
 mod profile;
@@ -30,6 +31,7 @@ register_commands! {
     Clean
     List
     Import
+    Encrypt
     Pull
     Update
     Cd

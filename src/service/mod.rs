@@ -98,9 +98,10 @@ impl Service {
 
         for event in &self.rx {
             info!("received event: {event:?}");
+            // FIXME: read decryption key from config or from local storage
             match event {
                 Event::Apply => {
-                    if let Err(err) = dotfiles::apply(&self.cfg, None::<&str>) {
+                    if let Err(err) = dotfiles::apply(&self.cfg, None::<&str>, None::<&str>) {
                         error!("failed applying dotfiles: {err}");
                     }
                 }
@@ -114,7 +115,8 @@ impl Service {
                 Event::Pull => {
                     if let Err(err) = dotfiles::pull(&self.cfg) {
                         error!("failed pulling dotfiles stage: {err}");
-                    } else if let Err(err) = dotfiles::apply(&self.cfg, None::<&str>) {
+                    } else if let Err(err) = dotfiles::apply(&self.cfg, None::<&str>, None::<&str>)
+                    {
                         error!("failed applying dotfiles after pull: {err}");
                     }
                 }

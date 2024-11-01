@@ -17,11 +17,16 @@ pub struct Apply {
     // The profile to be applied
     #[arg(short, long)]
     profile: Option<String>,
+
+    // The decryption key for the profile
+    #[arg(short = 'k', long, alias = "key")]
+    decryption_key: Option<String>,
 }
 
 impl Command for Apply {
     fn run(&self, cfg: &Config) -> Result<()> {
-        dotfiles::apply(cfg, self.profile.as_ref())?;
+        // FIXME: read decryption key from local storage or prompt if required
+        dotfiles::apply(cfg, self.profile.as_ref(), self.decryption_key.as_ref())?;
         success!("Dotfiles applied from stage.");
         Ok(())
     }

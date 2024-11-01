@@ -17,6 +17,7 @@ re_export! {
     apply
     cd
     clean
+    encrypt
     import
     list
     pull

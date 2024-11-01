@@ -1,7 +1,7 @@
 use super::git::{self, Change, Git};
 use crate::config::Config;
 use crate::filecache::{FileCache, NAME_FILECACHE};
-use crate::profile::{get_applied_profile, write_applied_profile, Profile, Value};
+use crate::profile::{get_applied_profile, write_applied_profile, DecodeValue, Profile};
 use anyhow::Result;
 use handlebars::Handlebars;
 use ignore::{DirEntry, WalkBuilder};
@@ -10,7 +10,11 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-pub fn apply<S: Into<String>>(cfg: &Config, profile: Option<S>) -> Result<()> {
+pub fn apply(
+    cfg: &Config,
+    profile: Option<impl Into<String>>,
+    decryption_key: Option<impl AsRef<str>>,
+) -> Result<()> {
     assert_stage_dir_initialized(cfg)?;
 
     let home_dir = super::home_dir()?;
@@ -24,7 +28,12 @@ pub fn apply<S: Into<String>>(cfg: &Config, profile: Option<S>) -> Result<()> {
 
     debug!("profile = {profile:?}");
 
-    let copied_files = apply_recursively(&cfg.stage_dir, &home_dir, profile.as_deref())?;
+    let copied_files = apply_recursively(
+        &cfg.stage_dir,
+        &home_dir,
+        profile.as_deref(),
+        decryption_key.as_ref().map(|v| v.as_ref()),
+    )?;
 
     let mut fc = FileCache::open(cfg.cache_dir.as_ref().join(NAME_FILECACHE))?;
 
@@ -117,6 +126,7 @@ fn apply_recursively(
     from: impl AsRef<Path>,
     to: impl AsRef<Path>,
     profile: Option<&str>,
+    decryption_key: Option<&str>,
 ) -> Result<Vec<PathBuf>> {
     let walker = WalkBuilder::new(&from)
         .hidden(false)
@@ -131,8 +141,10 @@ fn apply_recursively(
 
     let data = match profile {
         Some(profile) => Profile::new(from.as_ref(), profile != "default").load(profile)?,
-        None => Value::None,
+        None => DecodeValue::None,
     };
+
+    let data = data.decrypt(decryption_key)?;
 
     let mut buf = String::new();
 
